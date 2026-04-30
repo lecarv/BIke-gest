@@ -1,0 +1,2810 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>BikeGest — Gestão de Oficina</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#f5a623">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BikeGest">
+<meta name="application-name" content="BikeGest">
+<meta name="msapplication-TileColor" content="#f5a623">
+<meta name="msapplication-TileImage" content="icons/icon-144.png">
+<meta name="description" content="Sistema de Gestão de Oficina Mecânica de Bicicletas">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="144x144" href="icons/icon-144.png">
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #2e2e2e;
+    --accent: #f5a623;
+    --accent2: #e8522e;
+    --text: #f0ede8;
+    --muted: #888;
+    --success: #4caf7d;
+    --danger: #e8522e;
+    --info: #5b9bd5;
+    --warning: #f5a623;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* LOGIN */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 60% 40%, #1e1200 0%, #0f0f0f 70%);
+  }
+
+  .login-box {
+    width: 380px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 48px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .login-logo {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+
+  .login-logo span { color: var(--accent); }
+
+  .login-sub {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 36px;
+  }
+
+  .form-group { margin-bottom: 20px; }
+
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .form-group select option { background: var(--surface); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #e09510; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #c43f1f; }
+  .btn-success { background: var(--success); color: #000; }
+  .btn-success:hover { background: #3a9665; }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm { padding: 6px 12px; font-size: 11px; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  /* LAYOUT */
+  #app { display: none; min-height: 100vh; }
+
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+  }
+
+  .sidebar-brand {
+    padding: 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-brand .logo {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -1px;
+  }
+
+  .sidebar-brand .logo span { color: var(--accent); }
+
+  .sidebar-brand .version {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .sidebar-user {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .sidebar-user .name { font-weight: 700; }
+  .sidebar-user .role {
+    color: var(--accent);
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+
+  .nav-section {
+    padding: 8px 20px 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+
+  .nav-item.active {
+    color: var(--accent);
+    background: rgba(245,166,35,0.08);
+    border-left-color: var(--accent);
+  }
+
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .main-content {
+    margin-left: 220px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .topbar-title {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .content { padding: 32px; flex: 1; }
+
+  /* CARDS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* TABLE */
+  .table-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table-title {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .table-actions { display: flex; gap: 8px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th {
+    background: var(--surface2);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .badge-success { background: rgba(76,175,125,0.15); color: var(--success); }
+  .badge-danger { background: rgba(232,82,46,0.15); color: var(--danger); }
+  .badge-warning { background: rgba(245,166,35,0.15); color: var(--warning); }
+  .badge-info { background: rgba(91,155,213,0.15); color: var(--info); }
+  .badge-muted { background: rgba(136,136,136,0.15); color: var(--muted); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .modal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-title { font-size: 16px; font-weight: 800; }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    padding: 4px;
+  }
+
+  .modal-close:hover { color: var(--text); }
+
+  .modal-body { padding: 24px; }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  /* FORM GRID */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid .span2 { grid-column: span 2; }
+
+  /* SEARCH */
+  .search-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .search-bar input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .search-bar input:focus { border-color: var(--accent); }
+
+  /* TOAST */
+  #toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    padding: 12px 16px;
+    min-width: 260px;
+    font-size: 13px;
+    animation: slideIn 0.3s ease;
+  }
+
+  .toast.toast-error { border-left-color: var(--danger); }
+  .toast.toast-success { border-left-color: var(--success); }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .page-title {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -1px;
+  }
+
+  /* ORDEM DE SERVIÇO STATUS */
+  .os-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--border);
+    transition: border-color 0.2s;
+  }
+
+  .os-card.status-ABERTA { border-left-color: var(--info); }
+  .os-card.status-EM_ANDAMENTO { border-left-color: var(--warning); }
+  .os-card.status-CONCLUIDA { border-left-color: var(--success); }
+  .os-card.status-CANCELADA { border-left-color: var(--muted); }
+
+  .os-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .os-num { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--muted); }
+  .os-client { font-weight: 700; font-size: 15px; }
+  .os-desc { font-size: 13px; color: var(--muted); margin: 6px 0; }
+  .os-footer { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+
+  /* PEDIDO items */
+  .item-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 100px 36px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  /* RESPONSIVE */
+
+  /* ── PWA / MOBILE ENHANCEMENTS ── */
+  :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+  }
+
+  html { height: 100%; }
+
+  body {
+    height: 100%;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    touch-action: pan-y;
+    overscroll-behavior: none;
+  }
+
+  /* Sidebar oculta no mobile, bottom-nav aparece */
+  .bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: calc(56px + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 200;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bottom-nav-inner {
+    display: flex;
+    align-items: stretch;
+    height: 56px;
+    min-width: max-content;
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 0 14px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 64px;
+    border-top: 3px solid transparent;
+    transition: all 0.15s;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .bottom-nav-item .bn-icon { font-size: 20px; line-height: 1; }
+  .bottom-nav-item.active { color: var(--accent); border-top-color: var(--accent); }
+  .bottom-nav-item:active { background: rgba(245,166,35,0.1); }
+
+  /* Hamburger button for sidebar */
+  .hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+  }
+
+  /* Mobile sidebar overlay */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 99;
+  }
+
+  .sidebar-overlay.open { display: block; }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 110;
+      width: 260px;
+    }
+    .sidebar.open { transform: translateX(0); }
+
+    .main-content { margin-left: 0; }
+
+    .hamburger-btn { display: flex; }
+
+    .bottom-nav { display: block; }
+
+    .content {
+      padding: 16px;
+      padding-bottom: calc(72px + var(--safe-bottom));
+    }
+
+    .topbar {
+      padding: 0 16px;
+      padding-top: var(--safe-top);
+      height: calc(52px + var(--safe-top));
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .stat-value { font-size: 22px; }
+
+    /* Stack dashboard panels vertically */
+    #page-dashboard > div:last-child {
+      grid-template-columns: 1fr !important;
+    }
+
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid .span2 { grid-column: span 1; }
+
+    .modal { width: 96%; max-height: 92vh; }
+
+    table { font-size: 12px; }
+    th, td { padding: 10px 10px; }
+
+    /* Hide less important columns on mobile */
+    th:nth-child(4), td:nth-child(4),
+    th:nth-child(5), td:nth-child(5),
+    th:nth-child(6), td:nth-child(6) {
+      display: none;
+    }
+
+    .os-card { padding: 14px; }
+
+    .item-row {
+      grid-template-columns: 1fr 60px 80px 32px;
+      gap: 4px;
+    }
+
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .login-box {
+      width: 95%;
+      padding: 32px 24px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .stats-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Install banner */
+  #install-banner {
+    display: none;
+    position: fixed;
+    bottom: calc(60px + var(--safe-bottom));
+    left: 12px; right: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    padding: 12px 16px;
+    z-index: 300;
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  #install-banner.show { display: flex; align-items: center; gap: 12px; }
+
+  .install-text { flex: 1; font-size: 13px; line-height: 1.4; }
+  .install-text strong { color: var(--accent); }
+
+  /* Splash screen */
+  #splash {
+    position: fixed;
+    inset: 0;
+    background: #0f0f0f;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.4s ease;
+  }
+
+  #splash.hidden { opacity: 0; pointer-events: none; }
+
+  .splash-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .splash-logo span { color: var(--accent); }
+
+  .splash-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 40px;
+  }
+
+  .splash-loader {
+    width: 160px;
+    height: 3px;
+    background: var(--surface2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .splash-loader::after {
+    content: '';
+    position: absolute;
+    left: -50%;
+    top: 0; bottom: 0;
+    width: 50%;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: shimmer 1s infinite;
+  }
+
+  @keyframes shimmer {
+    to { left: 150%; }
+  }
+
+  /* Smooth page transitions */
+  .page { animation: none; }
+  .page.active { animation: fadeIn 0.2s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Better touch targets */
+  .btn { min-height: 40px; }
+  .btn-sm { min-height: 32px; }
+  .nav-item { min-height: 48px; }
+  .bottom-nav-item { min-height: 56px; }
+
+  /* Pull-to-refresh feel */
+  .content { scroll-behavior: smooth; }
+
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--muted);
+  }
+
+  .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+  .empty-state p { font-size: 14px; }
+
+  .text-right { text-align: right; }
+  .text-mono { font-family: 'Space Mono', monospace; }
+  .mt16 { margin-top: 16px; }
+  .mt24 { margin-top: 24px; }
+  .flex { display: flex; align-items: center; gap: 8px; }
+
+  /* REPORT */
+  #report-output {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-top: 16px;
+    min-height: 200px;
+  }
+
+  .report-title {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .report-meta {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 20px;
+  }
+
+  @media print {
+    .sidebar, .topbar, .btn, #toast-container { display: none !important; }
+    .main-content { margin-left: 0; }
+    #report-output { border: none; }
+    body { background: white; color: black; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+
+<!-- Splash Screen -->
+<div id="splash">
+  <div class="splash-logo">Bike<span>Gest</span></div>
+  <div class="splash-sub">// GESTÃO DE OFICINA MECÂNICA</div>
+  <div class="splash-loader"></div>
+</div>
+
+<!-- Sidebar overlay for mobile -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- Install Banner -->
+<div id="install-banner">
+  <span style="font-size:28px">📲</span>
+  <div class="install-text">
+    <strong>Instalar BikeGest</strong><br>
+    Adicione à tela inicial para acesso rápido offline
+  </div>
+  <button class="btn btn-primary btn-sm" id="install-btn">Instalar</button>
+  <button class="btn btn-outline btn-sm" onclick="document.getElementById('install-banner').classList.remove('show')">✕</button>
+</div>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Bike<span>Gest</span></div>
+    <div class="login-sub">// SISTEMA DE GESTÃO DE OFICINA</div>
+    <div class="form-group">
+      <label>Usuário</label>
+      <input type="text" id="login-user" placeholder="seu usuário" />
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="••••••••" />
+    </div>
+    <div id="login-error" style="color:var(--danger);font-size:12px;margin-bottom:12px;display:none;"></div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">ENTRAR →</button>
+    <div style="margin-top:24px;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;">
+      Usuário padrão: <strong style="color:var(--accent)">admin</strong> / Senha: <strong style="color:var(--accent)">admin123</strong>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">Bike<span>Gest</span></div>
+      <div class="version">v1.0 — UNESA 2018</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="name" id="sb-name">—</div>
+      <div class="role" id="sb-role">—</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Principal</div>
+      <div class="nav-item active" data-page="dashboard" onclick="goPage('dashboard')">
+        <span class="icon">⊞</span> Dashboard
+      </div>
+
+      <div class="nav-section">Cadastros</div>
+      <div class="nav-item gerente-only vendedor-only" data-page="clientes" onclick="goPage('clientes')">
+        <span class="icon">👤</span> Clientes
+      </div>
+      <div class="nav-item" data-page="bicicletas" onclick="goPage('bicicletas')">
+        <span class="icon">🚲</span> Bicicletas
+      </div>
+      <div class="nav-item gerente-only" data-page="fornecedores" onclick="goPage('fornecedores')">
+        <span class="icon">🏭</span> Fornecedores
+      </div>
+      <div class="nav-item gerente-only" data-page="produtos" onclick="goPage('produtos')">
+        <span class="icon">📦</span> Produtos
+      </div>
+      <div class="nav-item gerente-only" data-page="estoque" onclick="goPage('estoque')">
+        <span class="icon">📊</span> Estoque
+      </div>
+      <div class="nav-item gerente-only" data-page="usuarios" onclick="goPage('usuarios')">
+        <span class="icon">👥</span> Usuários
+      </div>
+
+      <div class="nav-section">Operações</div>
+      <div class="nav-item gerente-only vendedor-only" data-page="pedidos" onclick="goPage('pedidos')">
+        <span class="icon">🛒</span> Pedidos
+      </div>
+      <div class="nav-item" data-page="ordens" onclick="goPage('ordens')">
+        <span class="icon">🔧</span> Ordens de Serviço
+      </div>
+
+      <div class="nav-section">Relatórios</div>
+      <div class="nav-item" data-page="relatorios" onclick="goPage('relatorios')">
+        <span class="icon">📄</span> Relatórios
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn btn-outline btn-sm btn-full" onclick="doLogout()">✕ Sair</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)" id="topbar-date"></div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="stats-grid"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div class="table-container">
+            <div class="table-header"><div class="table-title">Últimas Ordens de Serviço</div></div>
+            <div id="dash-os"></div>
+          </div>
+          <div class="table-container">
+            <div class="table-header"><div class="table-title">Últimos Pedidos</div></div>
+            <div id="dash-pedidos"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="page" id="page-clientes">
+        <div class="page-header">
+          <div class="page-title">Clientes</div>
+          <button class="btn btn-primary" onclick="modalCliente()">+ Novo Cliente</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="search-clientes" placeholder="Buscar por nome ou CPF..." oninput="renderClientes()">
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Nome</th><th>CPF</th><th>Telefone</th><th>Email</th><th>Status</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-clientes"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- BICICLETAS -->
+      <div class="page" id="page-bicicletas">
+        <div class="page-header">
+          <div class="page-title">Bicicletas</div>
+          <button class="btn btn-primary" onclick="modalBicicleta()">+ Nova Bicicleta</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="search-bicicletas" placeholder="Buscar por marca, modelo ou cliente..." oninput="renderBicicletas()">
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Cliente</th><th>Marca</th><th>Modelo</th><th>Cor</th><th>Ano</th><th>Nº Série</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="tbody-bicicletas"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FORNECEDORES -->
+      <div class="page" id="page-fornecedores">
+        <div class="page-header">
+          <div class="page-title">Fornecedores</div>
+          <button class="btn btn-primary" onclick="modalFornecedor()">+ Novo Fornecedor</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="search-fornecedores" placeholder="Buscar por nome ou CNPJ..." oninput="renderFornecedores()">
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Nome</th><th>CNPJ</th><th>Telefone</th><th>Email</th><th>Contato</th><th>Status</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="tbody-fornecedores"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PRODUTOS -->
+      <div class="page" id="page-produtos">
+        <div class="page-header">
+          <div class="page-title">Produtos</div>
+          <button class="btn btn-primary" onclick="modalProduto()">+ Novo Produto</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="search-produtos" placeholder="Buscar por descrição ou fornecedor..." oninput="renderProdutos()">
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Descrição</th><th>Fornecedor</th><th>Preço</th><th>Estoque</th><th>Status</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="tbody-produtos"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ESTOQUE -->
+      <div class="page" id="page-estoque">
+        <div class="page-header">
+          <div class="page-title">Controle de Estoque</div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Produto</th><th>Estoque Inicial</th><th>Estoque Atual</th><th>Última Alt.</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="tbody-estoque"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- USUÁRIOS -->
+      <div class="page" id="page-usuarios">
+        <div class="page-header">
+          <div class="page-title">Usuários</div>
+          <button class="btn btn-primary" onclick="modalUsuario()">+ Novo Usuário</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Login</th><th>Nome</th><th>CPF</th><th>Função</th><th>Perfil</th><th>Status</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="tbody-usuarios"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PEDIDOS -->
+      <div class="page" id="page-pedidos">
+        <div class="page-header">
+          <div class="page-title">Pedidos</div>
+          <button class="btn btn-primary" onclick="modalPedido()">+ Novo Pedido</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="search-pedidos" placeholder="Buscar por cliente ou número..." oninput="renderPedidos()">
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Status</th><th>Data</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="tbody-pedidos"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ORDENS DE SERVIÇO -->
+      <div class="page" id="page-ordens">
+        <div class="page-header">
+          <div class="page-title">Ordens de Serviço</div>
+          <button class="btn btn-primary" onclick="modalOrdem()">+ Nova OS</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="search-ordens" placeholder="Buscar por cliente, bicicleta ou número..." oninput="renderOrdens()">
+          <select id="filter-status-os" onchange="renderOrdens()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'Space Mono',monospace;font-size:12px;outline:none;">
+            <option value="">Todos os status</option>
+            <option>ABERTA</option>
+            <option>EM_ANDAMENTO</option>
+            <option>CONCLUIDA</option>
+            <option>CANCELADA</option>
+          </select>
+        </div>
+        <div id="list-ordens"></div>
+      </div>
+
+      <!-- RELATÓRIOS -->
+      <div class="page" id="page-relatorios">
+        <div class="page-title" style="margin-bottom:24px">Relatórios</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:24px">
+          <div class="stat-card" style="cursor:pointer" onclick="gerarRelatorio('clientes')">
+            <div class="stat-label">Cadastros</div>
+            <div style="font-size:24px;margin:8px 0">👥</div>
+            <div style="font-weight:700">Relatório de Clientes</div>
+          </div>
+          <div class="stat-card" style="cursor:pointer" onclick="gerarRelatorio('pedidos')">
+            <div class="stat-label">Vendas</div>
+            <div style="font-size:24px;margin:8px 0">🛒</div>
+            <div style="font-weight:700">Relatório de Pedidos</div>
+          </div>
+          <div class="stat-card" style="cursor:pointer" onclick="gerarRelatorio('ordens')">
+            <div class="stat-label">Serviços</div>
+            <div style="font-size:24px;margin:8px 0">🔧</div>
+            <div style="font-weight:700">Relatório de Ordens de Serviço</div>
+          </div>
+          <div class="stat-card" style="cursor:pointer" onclick="gerarRelatorio('estoque')">
+            <div class="stat-label">Estoque</div>
+            <div style="font-size:24px;margin:8px 0">📦</div>
+            <div style="font-weight:700">Relatório de Estoque</div>
+          </div>
+        </div>
+        <div id="report-output" style="display:none">
+          <div class="flex" style="justify-content:space-between;margin-bottom:16px">
+            <div></div>
+            <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ Imprimir</button>
+          </div>
+          <div id="report-content"></div>
+        </div>
+      </div>
+
+    </div>
+
+  <!-- Bottom Navigation (mobile) -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <div class="bottom-nav-inner">
+      <div class="bottom-nav-item active" data-page="dashboard" onclick="goPage('dashboard')">
+        <span class="bn-icon">⊞</span>
+        <span>Início</span>
+      </div>
+      <div class="bottom-nav-item" data-page="clientes" onclick="goPage('clientes')">
+        <span class="bn-icon">👤</span>
+        <span>Clientes</span>
+      </div>
+      <div class="bottom-nav-item" data-page="ordens" onclick="goPage('ordens')">
+        <span class="bn-icon">🔧</span>
+        <span>OS</span>
+      </div>
+      <div class="bottom-nav-item" data-page="pedidos" onclick="goPage('pedidos')">
+        <span class="bn-icon">🛒</span>
+        <span>Pedidos</span>
+      </div>
+      <div class="bottom-nav-item" data-page="produtos" onclick="goPage('produtos')">
+        <span class="bn-icon">📦</span>
+        <span>Produtos</span>
+      </div>
+      <div class="bottom-nav-item" data-page="relatorios" onclick="goPage('relatorios')">
+        <span class="bn-icon">📄</span>
+        <span>Relat.</span>
+      </div>
+      <div class="bottom-nav-item" onclick="doLogout()">
+        <span class="bn-icon">✕</span>
+        <span>Sair</span>
+      </div>
+    </div>
+  </nav>
+
+  </div>
+</div>
+
+<!-- MODAIS -->
+<!-- Modal Cliente -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-cliente-title">Novo Cliente</div>
+      <button class="modal-close" onclick="closeModal('modal-cliente')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cliente-id">
+      <div class="form-grid">
+        <div class="form-group span2">
+          <label>Nome Completo *</label>
+          <input type="text" id="cliente-nome" placeholder="Nome do cliente">
+        </div>
+        <div class="form-group">
+          <label>CPF *</label>
+          <input type="text" id="cliente-cpf" placeholder="00000000000" maxlength="11">
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="text" id="cliente-tel" placeholder="(21) 99999-9999">
+        </div>
+        <div class="form-group span2">
+          <label>E-mail</label>
+          <input type="email" id="cliente-email" placeholder="email@exemplo.com">
+        </div>
+        <div class="form-group span2">
+          <label>Endereço</label>
+          <input type="text" id="cliente-end" placeholder="Rua, número, bairro, cidade">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCliente()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Bicicleta -->
+<div class="modal-overlay" id="modal-bicicleta">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-bike-title">Nova Bicicleta</div>
+      <button class="modal-close" onclick="closeModal('modal-bicicleta')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="bike-id">
+      <div class="form-grid">
+        <div class="form-group span2">
+          <label>Cliente *</label>
+          <select id="bike-cliente"></select>
+        </div>
+        <div class="form-group">
+          <label>Marca *</label>
+          <input type="text" id="bike-marca" placeholder="Ex: Trek, Specialized">
+        </div>
+        <div class="form-group">
+          <label>Modelo *</label>
+          <input type="text" id="bike-modelo" placeholder="Ex: MTB 29, Road">
+        </div>
+        <div class="form-group">
+          <label>Cor</label>
+          <input type="text" id="bike-cor" placeholder="Ex: Preto">
+        </div>
+        <div class="form-group">
+          <label>Ano</label>
+          <input type="number" id="bike-ano" placeholder="2024" min="1990" max="2030">
+        </div>
+        <div class="form-group span2">
+          <label>Número de Série</label>
+          <input type="text" id="bike-serie" placeholder="Número de série da bicicleta">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-bicicleta')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveBicicleta()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Fornecedor -->
+<div class="modal-overlay" id="modal-fornecedor">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-forn-title">Novo Fornecedor</div>
+      <button class="modal-close" onclick="closeModal('modal-fornecedor')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="forn-id">
+      <div class="form-grid">
+        <div class="form-group span2">
+          <label>Nome / Razão Social *</label>
+          <input type="text" id="forn-nome" placeholder="Nome do fornecedor">
+        </div>
+        <div class="form-group">
+          <label>CNPJ *</label>
+          <input type="text" id="forn-cnpj" placeholder="00000000000000" maxlength="14">
+        </div>
+        <div class="form-group">
+          <label>Telefone</label>
+          <input type="text" id="forn-tel" placeholder="(21) 9999-9999">
+        </div>
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="forn-email" placeholder="contato@fornecedor.com">
+        </div>
+        <div class="form-group">
+          <label>Nome do Contato</label>
+          <input type="text" id="forn-contato" placeholder="Nome do responsável">
+        </div>
+        <div class="form-group span2">
+          <label>Endereço</label>
+          <input type="text" id="forn-end" placeholder="Endereço completo">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-fornecedor')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFornecedor()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Produto -->
+<div class="modal-overlay" id="modal-produto">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-prod-title">Novo Produto</div>
+      <button class="modal-close" onclick="closeModal('modal-produto')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="prod-id">
+      <div class="form-grid">
+        <div class="form-group span2">
+          <label>Descrição *</label>
+          <input type="text" id="prod-desc" placeholder="Descrição do produto">
+        </div>
+        <div class="form-group">
+          <label>Fornecedor *</label>
+          <select id="prod-fornecedor"></select>
+        </div>
+        <div class="form-group">
+          <label>Preço de Venda (R$) *</label>
+          <input type="number" id="prod-valor" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label>Qtd. Inicial em Estoque</label>
+          <input type="number" id="prod-estoque" placeholder="0" min="0" value="0">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-produto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProduto()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Estoque -->
+<div class="modal-overlay" id="modal-estoque">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Ajustar Estoque</div>
+      <button class="modal-close" onclick="closeModal('modal-estoque')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="est-prodid">
+      <div class="form-group">
+        <label>Produto</label>
+        <input type="text" id="est-prod-nome" readonly style="opacity:0.6">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Estoque Atual</label>
+          <input type="number" id="est-atual" min="0">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-estoque')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEstoque()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Usuário -->
+<div class="modal-overlay" id="modal-usuario">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-usr-title">Novo Usuário</div>
+      <button class="modal-close" onclick="closeModal('modal-usuario')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="usr-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Login *</label>
+          <input type="text" id="usr-login" placeholder="login do usuário">
+        </div>
+        <div class="form-group">
+          <label>Senha *</label>
+          <input type="password" id="usr-senha" placeholder="mínimo 6 caracteres">
+        </div>
+        <div class="form-group span2">
+          <label>Nome Completo *</label>
+          <input type="text" id="usr-nome" placeholder="Nome do usuário">
+        </div>
+        <div class="form-group">
+          <label>CPF *</label>
+          <input type="text" id="usr-cpf" placeholder="00000000000" maxlength="11">
+        </div>
+        <div class="form-group">
+          <label>Função *</label>
+          <input type="text" id="usr-funcao" placeholder="Ex: Mecânico Chefe">
+        </div>
+        <div class="form-group">
+          <label>Perfil *</label>
+          <select id="usr-tipo">
+            <option value="1">Gerente</option>
+            <option value="2">Vendedor</option>
+            <option value="3">Mecânico</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-usuario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUsuario()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pedido -->
+<div class="modal-overlay" id="modal-pedido">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-ped-title">Novo Pedido</div>
+      <button class="modal-close" onclick="closeModal('modal-pedido')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ped-id">
+      <div class="form-grid">
+        <div class="form-group span2">
+          <label>Cliente *</label>
+          <select id="ped-cliente"></select>
+        </div>
+        <div class="form-group span2">
+          <label>Observação</label>
+          <textarea id="ped-obs" placeholder="Observações do pedido..."></textarea>
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:13px">Itens do Pedido</div>
+          <button class="btn btn-outline btn-sm" onclick="addItemPedido()">+ Item</button>
+        </div>
+        <div style="background:var(--bg);padding:12px;margin-bottom:8px;font-size:11px;display:grid;grid-template-columns:1fr 80px 100px 36px;gap:8px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;">
+          <span>Produto</span><span>Qtd</span><span>Preço</span><span></span>
+        </div>
+        <div id="itens-pedido-list"></div>
+        <div style="text-align:right;margin-top:12px;font-family:'Space Mono',monospace;font-size:16px;font-weight:700">
+          Total: R$ <span id="ped-total">0,00</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-pedido')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePedido()">Salvar Pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ordem de Serviço -->
+<div class="modal-overlay" id="modal-ordem">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-os-title">Nova Ordem de Serviço</div>
+      <button class="modal-close" onclick="closeModal('modal-ordem')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="os-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Cliente *</label>
+          <select id="os-cliente" onchange="loadBikesForOS()"></select>
+        </div>
+        <div class="form-group">
+          <label>Bicicleta *</label>
+          <select id="os-bicicleta"></select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de Serviço</label>
+          <select id="os-tipo"></select>
+        </div>
+        <div class="form-group">
+          <label>Status *</label>
+          <select id="os-status">
+            <option value="ABERTA">Aberta</option>
+            <option value="EM_ANDAMENTO">Em Andamento</option>
+            <option value="CONCLUIDA">Concluída</option>
+            <option value="CANCELADA">Cancelada</option>
+          </select>
+        </div>
+        <div class="form-group span2">
+          <label>Descrição do Serviço *</label>
+          <textarea id="os-desc" placeholder="Descreva o serviço a ser executado..."></textarea>
+        </div>
+        <div id="os-cancel-group" class="form-group span2" style="display:none">
+          <label>Justificativa de Cancelamento</label>
+          <textarea id="os-justificativa" placeholder="Motivo do cancelamento..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Valor Total (R$)</label>
+          <input type="number" id="os-valor" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:13px">Peças Utilizadas</div>
+          <button class="btn btn-outline btn-sm" onclick="addItemOS()">+ Peça</button>
+        </div>
+        <div id="itens-os-list"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-ordem')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveOrdem()">Salvar OS</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script>
+// ============================================================
+// DATABASE (IndexedDB)
+// ============================================================
+const DB_NAME = 'bikegest_db';
+const DB_VERSION = 1;
+let db;
+
+const stores = {
+  usuarios: { keyPath: 'id', autoIncrement: true },
+  clientes: { keyPath: 'id', autoIncrement: true },
+  bicicletas: { keyPath: 'id', autoIncrement: true },
+  fornecedores: { keyPath: 'id', autoIncrement: true },
+  produtos: { keyPath: 'id', autoIncrement: true },
+  estoque: { keyPath: 'id', autoIncrement: true },
+  pedidos: { keyPath: 'id', autoIncrement: true },
+  itenspedido: { keyPath: 'id', autoIncrement: true },
+  ordens: { keyPath: 'id', autoIncrement: true },
+  itensos: { keyPath: 'id', autoIncrement: true },
+  tiposservico: { keyPath: 'id', autoIncrement: true },
+};
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      Object.entries(stores).forEach(([name, opts]) => {
+        if (!db.objectStoreNames.contains(name)) {
+          db.createObjectStore(name, opts);
+        }
+      });
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e);
+  });
+}
+
+function dbGet(store, id) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).get(id);
+    req.onsuccess = () => res(req.result);
+    req.onerror = rej;
+  });
+}
+
+function dbGetAll(store) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => res(req.result);
+    req.onerror = rej;
+  });
+}
+
+function dbPut(store, obj) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, 'readwrite');
+    const req = tx.objectStore(store).put(obj);
+    req.onsuccess = () => res(req.result);
+    req.onerror = rej;
+  });
+}
+
+function dbDelete(store, id) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, 'readwrite');
+    const req = tx.objectStore(store).delete(id);
+    req.onsuccess = () => res(req.result);
+    req.onerror = rej;
+  });
+}
+
+// Seed initial data
+async function seedData() {
+  const usuariosExist = await dbGetAll('usuarios');
+  if (usuariosExist.length === 0) {
+    await dbPut('usuarios', {
+      usuario: 'admin', senha: 'admin123',
+      nome: 'Administrador', cpf: '00000000000',
+      funcao: 'Gerente', tipofuncao: 1, ativo: 1
+    });
+  }
+
+  const tsExist = await dbGetAll('tiposservico');
+  if (tsExist.length === 0) {
+    const tipos = [
+      { tiposervico: 'Revisão Básica', valor: 80 },
+      { tiposervico: 'Revisão Completa', valor: 150 },
+      { tiposervico: 'Troca de Câmara', valor: 30 },
+      { tiposervico: 'Troca de Pneu', valor: 50 },
+      { tiposervico: 'Ajuste de Freio', valor: 40 },
+      { tiposervico: 'Ajuste de Câmbio', valor: 40 },
+      { tiposervico: 'Manutenção Preventiva', valor: 120 },
+      { tiposervico: 'Bike Fitting', valor: 200 },
+    ];
+    for (const t of tipos) await dbPut('tiposservico', t);
+  }
+
+  // Demo data
+  const clientesExist = await dbGetAll('clientes');
+  if (clientesExist.length === 0) {
+    await dbPut('clientes', { nome: 'Carlos Pereira', cpf: '12345678901', telefone: '(21) 98888-1111', email: 'carlos@email.com', endereco: 'Rua das Bicicletas, 42 - Nova Friburgo/RJ', ativo: 1, datacadastro: new Date().toISOString() });
+    await dbPut('clientes', { nome: 'Maria Souza', cpf: '98765432100', telefone: '(21) 97777-2222', email: 'maria@email.com', endereco: 'Av. Ciclistas, 100 - Niterói/RJ', ativo: 1, datacadastro: new Date().toISOString() });
+
+    const forn = await dbPut('fornecedores', { nome: 'Shimano do Brasil Ltda', cnpj: '12345678000195', telefone: '(11) 3333-4444', email: 'vendas@shimano.com.br', contato: 'João Silva', endereco: 'SP, Brasil', ativo: 1 });
+
+    const prod1 = await dbPut('produtos', { descricao: 'Câmbio Shimano Deore M6000', idfornecedor: 1, valor: 320.00, ativo: 1 });
+    const prod2 = await dbPut('produtos', { descricao: 'Pneu Schwalbe 29x2.1 Racing Ralph', idfornecedor: 1, valor: 180.00, ativo: 1 });
+    const prod3 = await dbPut('produtos', { descricao: 'Câmara de Ar 29"', idfornecedor: 1, valor: 25.00, ativo: 1 });
+
+    await dbPut('estoque', { idproduto: prod1, estoqueini: 10, estoqueatual: 8, dataalt: new Date().toISOString() });
+    await dbPut('estoque', { idproduto: prod2, estoqueini: 20, estoqueatual: 15, dataalt: new Date().toISOString() });
+    await dbPut('estoque', { idproduto: prod3, estoqueini: 50, estoqueatual: 42, dataalt: new Date().toISOString() });
+
+    await dbPut('bicicletas', { idcliente: 1, marca: 'Trek', modelo: 'Marlin 7', cor: 'Preto/Verde', ano: 2022, numero_serie: 'TK2022001', ativo: 1 });
+    await dbPut('bicicletas', { idcliente: 2, marca: 'Specialized', modelo: 'Rockhopper', cor: 'Azul', ano: 2021, numero_serie: 'SP2021034', ativo: 1 });
+  }
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+let currentUser = null;
+
+async function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  const users = await dbGetAll('usuarios');
+  const user = users.find(x => x.usuario === u && x.senha === p && x.ativo);
+  if (!user) {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('login-error').textContent = 'Usuário ou senha incorretos.';
+    return;
+  }
+  currentUser = user;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('sb-name').textContent = user.nome;
+  const perfis = { 1: 'GERENTE', 2: 'VENDEDOR', 3: 'MECÂNICO' };
+  document.getElementById('sb-role').textContent = perfis[user.tipofuncao] || '';
+  applyPermissions();
+  goPage('dashboard');
+  updateDate();
+  // Allow enter key
+  document.getElementById('login-pass').onkeydown = e => { if(e.key==='Enter') doLogin(); };
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+
+function applyPermissions() {
+  const isGerente = currentUser.tipofuncao === 1;
+  const isVendedor = currentUser.tipofuncao === 2;
+  document.querySelectorAll('.gerente-only').forEach(el => {
+    el.style.display = isGerente ? '' : 'none';
+  });
+  document.querySelectorAll('.vendedor-only').forEach(el => {
+    if (!isGerente) el.style.display = isVendedor ? '' : 'none';
+  });
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const pageTitles = {
+  dashboard: 'Dashboard',
+  clientes: 'Clientes',
+  bicicletas: 'Bicicletas',
+  fornecedores: 'Fornecedores',
+  produtos: 'Produtos',
+  estoque: 'Controle de Estoque',
+  usuarios: 'Usuários',
+  pedidos: 'Pedidos',
+  ordens: 'Ordens de Serviço',
+  relatorios: 'Relatórios',
+};
+
+function goPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  document.getElementById('topbar-title').textContent = pageTitles[page] || page;
+  const loaders = {
+    dashboard: loadDashboard,
+    clientes: renderClientes,
+    bicicletas: renderBicicletas,
+    fornecedores: renderFornecedores,
+    produtos: renderProdutos,
+    estoque: renderEstoque,
+    usuarios: renderUsuarios,
+    pedidos: renderPedidos,
+    ordens: renderOrdens,
+  };
+  if (loaders[page]) loaders[page]();
+}
+
+function updateDate() {
+  const d = new Date();
+  document.getElementById('topbar-date').textContent =
+    d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(mo => {
+  mo.addEventListener('click', e => { if (e.target === mo) mo.classList.remove('open'); });
+});
+
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg, type = 'info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+async function loadDashboard() {
+  const [clientes, pedidos, ordens, bicicletas, produtos] = await Promise.all([
+    dbGetAll('clientes'), dbGetAll('pedidos'), dbGetAll('ordens'),
+    dbGetAll('bicicletas'), dbGetAll('produtos')
+  ]);
+
+  const statsGrid = document.getElementById('stats-grid');
+  const osAbertas = ordens.filter(o => o.status === 'ABERTA' || o.status === 'EM_ANDAMENTO').length;
+  const vendasMes = pedidos.filter(p => {
+    const d = new Date(p.datacriacao);
+    const n = new Date();
+    return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear() && p.status === 'CONCLUIDO';
+  }).reduce((a, p) => a + (p.total || 0), 0);
+
+  statsGrid.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Clientes Ativos</div>
+      <div class="stat-value">${clientes.filter(c => c.ativo).length}</div>
+      <div class="stat-sub">cadastros ativos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">OS Abertas</div>
+      <div class="stat-value">${osAbertas}</div>
+      <div class="stat-sub">em atendimento</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pedidos (Mês)</div>
+      <div class="stat-value">${pedidos.filter(p=>{ const d=new Date(p.datacriacao),n=new Date(); return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear(); }).length}</div>
+      <div class="stat-sub">concluídos no mês</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Faturamento (Mês)</div>
+      <div class="stat-value" style="font-size:20px">R$ ${vendasMes.toFixed(2).replace('.',',')}</div>
+      <div class="stat-sub">pedidos concluídos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Bicicletas</div>
+      <div class="stat-value">${bicicletas.filter(b=>b.ativo).length}</div>
+      <div class="stat-sub">cadastradas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Produtos</div>
+      <div class="stat-value">${produtos.filter(p=>p.ativo).length}</div>
+      <div class="stat-sub">no catálogo</div>
+    </div>
+  `;
+
+  // Last OS
+  const clientMap = {};
+  clientes.forEach(c => clientMap[c.id] = c.nome);
+  const lastOS = ordens.slice(-5).reverse();
+  const statusLabel = { ABERTA: 'info', EM_ANDAMENTO: 'warning', CONCLUIDA: 'success', CANCELADA: 'muted' };
+  document.getElementById('dash-os').innerHTML = lastOS.length === 0
+    ? '<div class="empty-state"><p>Nenhuma OS cadastrada</p></div>'
+    : `<table><tbody>${lastOS.map(o => `
+      <tr>
+        <td><span class="text-mono" style="font-size:11px;color:var(--muted)">#${o.id}</span><br><strong>${clientMap[o.idcliente] || '?'}</strong></td>
+        <td><span class="badge badge-${statusLabel[o.status] || 'muted'}">${o.status}</span></td>
+      </tr>`).join('')}</tbody></table>`;
+
+  const lastPed = pedidos.slice(-5).reverse();
+  document.getElementById('dash-pedidos').innerHTML = lastPed.length === 0
+    ? '<div class="empty-state"><p>Nenhum pedido cadastrado</p></div>'
+    : `<table><tbody>${lastPed.map(p => `
+      <tr>
+        <td><span class="text-mono" style="font-size:11px;color:var(--muted)">#${p.id}</span><br><strong>${clientMap[p.idcliente] || '?'}</strong></td>
+        <td class="text-mono">R$ ${(p.total||0).toFixed(2).replace('.',',')}</td>
+      </tr>`).join('')}</tbody></table>`;
+}
+
+// ============================================================
+// CLIENTES
+// ============================================================
+async function renderClientes() {
+  const clientes = await dbGetAll('clientes');
+  const q = document.getElementById('search-clientes')?.value?.toLowerCase() || '';
+  const filt = clientes.filter(c =>
+    c.nome.toLowerCase().includes(q) || (c.cpf || '').includes(q)
+  );
+  const tbody = document.getElementById('tbody-clientes');
+  tbody.innerHTML = filt.length === 0
+    ? `<tr><td colspan="7"><div class="empty-state"><div class="icon">👤</div><p>Nenhum cliente encontrado</p></div></td></tr>`
+    : filt.map(c => `
+      <tr>
+        <td class="text-mono" style="color:var(--muted)">#${c.id}</td>
+        <td><strong>${c.nome}</strong></td>
+        <td class="text-mono">${formatCPF(c.cpf)}</td>
+        <td>${c.telefone || '—'}</td>
+        <td>${c.email || '—'}</td>
+        <td><span class="badge ${c.ativo ? 'badge-success' : 'badge-danger'}">${c.ativo ? 'Ativo' : 'Inativo'}</span></td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="modalCliente(${c.id})">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCliente(${c.id})">🗑</button>
+        </td>
+      </tr>`).join('');
+}
+
+function modalCliente(id) {
+  document.getElementById('modal-cliente-title').textContent = id ? 'Editar Cliente' : 'Novo Cliente';
+  document.getElementById('cliente-id').value = id || '';
+  if (!id) {
+    ['nome','cpf','tel','email','end'].forEach(f => document.getElementById('cliente-'+f).value = '');
+    openModal('modal-cliente'); return;
+  }
+  dbGet('clientes', id).then(c => {
+    document.getElementById('cliente-nome').value = c.nome;
+    document.getElementById('cliente-cpf').value = c.cpf;
+    document.getElementById('cliente-tel').value = c.telefone || '';
+    document.getElementById('cliente-email').value = c.email || '';
+    document.getElementById('cliente-end').value = c.endereco || '';
+    openModal('modal-cliente');
+  });
+}
+
+async function saveCliente() {
+  const nome = document.getElementById('cliente-nome').value.trim();
+  const cpf = document.getElementById('cliente-cpf').value.trim();
+  if (!nome || !cpf) { toast('Nome e CPF são obrigatórios', 'error'); return; }
+  const id = document.getElementById('cliente-id').value;
+  const all = await dbGetAll('clientes');
+  const dup = all.find(c => c.cpf === cpf && (!id || c.id != id));
+  if (dup) { toast('CPF já cadastrado para outro cliente', 'error'); return; }
+  const obj = {
+    nome, cpf,
+    telefone: document.getElementById('cliente-tel').value,
+    email: document.getElementById('cliente-email').value,
+    endereco: document.getElementById('cliente-end').value,
+    ativo: 1,
+    datacadastro: new Date().toISOString()
+  };
+  if (id) obj.id = Number(id);
+  await dbPut('clientes', obj);
+  closeModal('modal-cliente');
+  toast(id ? 'Cliente atualizado' : 'Cliente cadastrado', 'success');
+  renderClientes();
+}
+
+async function deleteCliente(id) {
+  const ordens = await dbGetAll('ordens');
+  const pedidos = await dbGetAll('pedidos');
+  const hasOS = ordens.some(o => o.idcliente === id && o.status !== 'CANCELADA');
+  const hasPed = pedidos.some(p => p.idcliente === id && p.status === 'ABERTO');
+  if (hasOS || hasPed) { toast('Cliente possui OS ou pedidos em aberto', 'error'); return; }
+  if (!confirm('Deseja desativar este cliente?')) return;
+  const c = await dbGet('clientes', id);
+  c.ativo = 0;
+  await dbPut('clientes', c);
+  toast('Cliente desativado', 'success');
+  renderClientes();
+}
+
+function formatCPF(cpf) {
+  if (!cpf || cpf.length < 11) return cpf || '—';
+  return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+}
+
+// ============================================================
+// BICICLETAS
+// ============================================================
+async function renderBicicletas() {
+  const [bikes, clientes] = await Promise.all([dbGetAll('bicicletas'), dbGetAll('clientes')]);
+  const clientMap = {};
+  clientes.forEach(c => clientMap[c.id] = c.nome);
+  const q = document.getElementById('search-bicicletas')?.value?.toLowerCase() || '';
+  const filt = bikes.filter(b =>
+    b.ativo &&
+    (b.marca.toLowerCase().includes(q) || b.modelo.toLowerCase().includes(q) ||
+      (clientMap[b.idcliente] || '').toLowerCase().includes(q))
+  );
+  document.getElementById('tbody-bicicletas').innerHTML = filt.length === 0
+    ? `<tr><td colspan="8"><div class="empty-state"><div class="icon">🚲</div><p>Nenhuma bicicleta encontrada</p></div></td></tr>`
+    : filt.map(b => `
+      <tr>
+        <td class="text-mono" style="color:var(--muted)">#${b.id}</td>
+        <td><strong>${clientMap[b.idcliente] || '?'}</strong></td>
+        <td>${b.marca}</td>
+        <td>${b.modelo}</td>
+        <td>${b.cor || '—'}</td>
+        <td class="text-mono">${b.ano || '—'}</td>
+        <td class="text-mono" style="font-size:11px">${b.numero_serie || '—'}</td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="modalBicicleta(${b.id})">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteBicicleta(${b.id})">🗑</button>
+        </td>
+      </tr>`).join('');
+}
+
+async function modalBicicleta(id) {
+  const clientes = await dbGetAll('clientes');
+  const opts = clientes.filter(c => c.ativo).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  document.getElementById('bike-cliente').innerHTML = opts;
+  document.getElementById('modal-bike-title').textContent = id ? 'Editar Bicicleta' : 'Nova Bicicleta';
+  document.getElementById('bike-id').value = id || '';
+  if (!id) {
+    ['marca','modelo','cor','ano','serie'].forEach(f => document.getElementById('bike-'+f).value = '');
+    openModal('modal-bicicleta'); return;
+  }
+  const b = await dbGet('bicicletas', id);
+  document.getElementById('bike-cliente').value = b.idcliente;
+  document.getElementById('bike-marca').value = b.marca;
+  document.getElementById('bike-modelo').value = b.modelo;
+  document.getElementById('bike-cor').value = b.cor || '';
+  document.getElementById('bike-ano').value = b.ano || '';
+  document.getElementById('bike-serie').value = b.numero_serie || '';
+  openModal('modal-bicicleta');
+}
+
+async function saveBicicleta() {
+  const marca = document.getElementById('bike-marca').value.trim();
+  const modelo = document.getElementById('bike-modelo').value.trim();
+  const idcliente = Number(document.getElementById('bike-cliente').value);
+  if (!marca || !modelo || !idcliente) { toast('Preencha os campos obrigatórios', 'error'); return; }
+  const id = document.getElementById('bike-id').value;
+  const obj = {
+    idcliente, marca, modelo,
+    cor: document.getElementById('bike-cor').value,
+    ano: Number(document.getElementById('bike-ano').value) || null,
+    numero_serie: document.getElementById('bike-serie').value,
+    ativo: 1
+  };
+  if (id) obj.id = Number(id);
+  await dbPut('bicicletas', obj);
+  closeModal('modal-bicicleta');
+  toast(id ? 'Bicicleta atualizada' : 'Bicicleta cadastrada', 'success');
+  renderBicicletas();
+}
+
+async function deleteBicicleta(id) {
+  if (!confirm('Deseja remover esta bicicleta?')) return;
+  const b = await dbGet('bicicletas', id);
+  b.ativo = 0;
+  await dbPut('bicicletas', b);
+  toast('Bicicleta removida', 'success');
+  renderBicicletas();
+}
+
+// ============================================================
+// FORNECEDORES
+// ============================================================
+async function renderFornecedores() {
+  const forns = await dbGetAll('fornecedores');
+  const q = document.getElementById('search-fornecedores')?.value?.toLowerCase() || '';
+  const filt = forns.filter(f =>
+    f.nome.toLowerCase().includes(q) || (f.cnpj || '').includes(q)
+  );
+  document.getElementById('tbody-fornecedores').innerHTML = filt.length === 0
+    ? `<tr><td colspan="8"><div class="empty-state"><div class="icon">🏭</div><p>Nenhum fornecedor encontrado</p></div></td></tr>`
+    : filt.map(f => `
+      <tr>
+        <td class="text-mono" style="color:var(--muted)">#${f.id}</td>
+        <td><strong>${f.nome}</strong></td>
+        <td class="text-mono" style="font-size:12px">${formatCNPJ(f.cnpj)}</td>
+        <td>${f.telefone || '—'}</td>
+        <td>${f.email || '—'}</td>
+        <td>${f.contato || '—'}</td>
+        <td><span class="badge ${f.ativo ? 'badge-success' : 'badge-danger'}">${f.ativo ? 'Ativo' : 'Inativo'}</span></td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="modalFornecedor(${f.id})">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteFornecedor(${f.id})">🗑</button>
+        </td>
+      </tr>`).join('');
+}
+
+function formatCNPJ(cnpj) {
+  if (!cnpj || cnpj.length < 14) return cnpj || '—';
+  return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+}
+
+async function modalFornecedor(id) {
+  document.getElementById('modal-forn-title').textContent = id ? 'Editar Fornecedor' : 'Novo Fornecedor';
+  document.getElementById('forn-id').value = id || '';
+  if (!id) {
+    ['nome','cnpj','tel','email','contato','end'].forEach(f => document.getElementById('forn-'+f).value = '');
+    openModal('modal-fornecedor'); return;
+  }
+  const f = await dbGet('fornecedores', id);
+  document.getElementById('forn-nome').value = f.nome;
+  document.getElementById('forn-cnpj').value = f.cnpj;
+  document.getElementById('forn-tel').value = f.telefone || '';
+  document.getElementById('forn-email').value = f.email || '';
+  document.getElementById('forn-contato').value = f.contato || '';
+  document.getElementById('forn-end').value = f.endereco || '';
+  openModal('modal-fornecedor');
+}
+
+async function saveFornecedor() {
+  const nome = document.getElementById('forn-nome').value.trim();
+  const cnpj = document.getElementById('forn-cnpj').value.trim();
+  if (!nome || !cnpj) { toast('Nome e CNPJ são obrigatórios', 'error'); return; }
+  const id = document.getElementById('forn-id').value;
+  const all = await dbGetAll('fornecedores');
+  const dup = all.find(f => f.cnpj === cnpj && (!id || f.id != id));
+  if (dup) { toast('CNPJ já cadastrado', 'error'); return; }
+  const obj = {
+    nome, cnpj,
+    telefone: document.getElementById('forn-tel').value,
+    email: document.getElementById('forn-email').value,
+    contato: document.getElementById('forn-contato').value,
+    endereco: document.getElementById('forn-end').value,
+    ativo: 1
+  };
+  if (id) obj.id = Number(id);
+  await dbPut('fornecedores', obj);
+  closeModal('modal-fornecedor');
+  toast(id ? 'Fornecedor atualizado' : 'Fornecedor cadastrado', 'success');
+  renderFornecedores();
+}
+
+async function deleteFornecedor(id) {
+  const produtos = await dbGetAll('produtos');
+  const hasProd = produtos.some(p => p.idfornecedor === id && p.ativo);
+  if (!confirm('Desativar este fornecedor?' + (hasProd ? '\n(Produtos associados serão mantidos)' : ''))) return;
+  const f = await dbGet('fornecedores', id);
+  f.ativo = 0;
+  await dbPut('fornecedores', f);
+  toast('Fornecedor desativado', 'success');
+  renderFornecedores();
+}
+
+// ============================================================
+// PRODUTOS
+// ============================================================
+async function renderProdutos() {
+  const [prods, forns, estList] = await Promise.all([
+    dbGetAll('produtos'), dbGetAll('fornecedores'), dbGetAll('estoque')
+  ]);
+  const fornMap = {};
+  forns.forEach(f => fornMap[f.id] = f.nome);
+  const estMap = {};
+  estList.forEach(e => estMap[e.idproduto] = e.estoqueatual);
+  const q = document.getElementById('search-produtos')?.value?.toLowerCase() || '';
+  const filt = prods.filter(p =>
+    p.descricao.toLowerCase().includes(q) || (fornMap[p.idfornecedor] || '').toLowerCase().includes(q)
+  );
+  document.getElementById('tbody-produtos').innerHTML = filt.length === 0
+    ? `<tr><td colspan="7"><div class="empty-state"><div class="icon">📦</div><p>Nenhum produto encontrado</p></div></td></tr>`
+    : filt.map(p => {
+      const est = estMap[p.id] ?? '—';
+      const estBadge = typeof est === 'number' ? (est < 5 ? 'badge-danger' : est < 15 ? 'badge-warning' : 'badge-success') : 'badge-muted';
+      return `
+        <tr>
+          <td class="text-mono" style="color:var(--muted)">#${p.id}</td>
+          <td><strong>${p.descricao}</strong></td>
+          <td>${fornMap[p.idfornecedor] || '?'}</td>
+          <td class="text-mono">R$ ${(p.valor||0).toFixed(2).replace('.',',')}</td>
+          <td><span class="badge ${estBadge}">${est}</span></td>
+          <td><span class="badge ${p.ativo ? 'badge-success' : 'badge-danger'}">${p.ativo ? 'Ativo' : 'Inativo'}</span></td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="modalProduto(${p.id})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProduto(${p.id})">🗑</button>
+          </td>
+        </tr>`;
+    }).join('');
+}
+
+async function modalProduto(id) {
+  const forns = await dbGetAll('fornecedores');
+  const opts = forns.filter(f => f.ativo).map(f => `<option value="${f.id}">${f.nome}</option>`).join('');
+  document.getElementById('prod-fornecedor').innerHTML = '<option value="">Selecione...</option>' + opts;
+  document.getElementById('modal-prod-title').textContent = id ? 'Editar Produto' : 'Novo Produto';
+  document.getElementById('prod-id').value = id || '';
+  document.getElementById('prod-estoque').closest('.form-group').style.display = id ? 'none' : '';
+  if (!id) {
+    document.getElementById('prod-desc').value = '';
+    document.getElementById('prod-valor').value = '';
+    document.getElementById('prod-estoque').value = 0;
+    openModal('modal-produto'); return;
+  }
+  const p = await dbGet('produtos', id);
+  document.getElementById('prod-desc').value = p.descricao;
+  document.getElementById('prod-fornecedor').value = p.idfornecedor;
+  document.getElementById('prod-valor').value = p.valor;
+  openModal('modal-produto');
+}
+
+async function saveProduto() {
+  const desc = document.getElementById('prod-desc').value.trim();
+  const idfornecedor = Number(document.getElementById('prod-fornecedor').value);
+  const valor = parseFloat(document.getElementById('prod-valor').value) || 0;
+  if (!desc || !idfornecedor) { toast('Preencha os campos obrigatórios', 'error'); return; }
+  const id = document.getElementById('prod-id').value;
+  const obj = { descricao: desc, idfornecedor, valor, ativo: 1 };
+  if (id) obj.id = Number(id);
+  const newId = await dbPut('produtos', obj);
+  if (!id) {
+    const qtd = parseInt(document.getElementById('prod-estoque').value) || 0;
+    await dbPut('estoque', { idproduto: newId, estoqueini: qtd, estoqueatual: qtd, dataalt: new Date().toISOString() });
+  }
+  closeModal('modal-produto');
+  toast(id ? 'Produto atualizado' : 'Produto cadastrado', 'success');
+  renderProdutos();
+}
+
+async function deleteProduto(id) {
+  const itensPed = await dbGetAll('itenspedido');
+  if (itensPed.some(i => i.idproduto === id)) { toast('Produto possui pedidos associados', 'error'); return; }
+  if (!confirm('Desativar este produto?')) return;
+  const p = await dbGet('produtos', id);
+  p.ativo = 0;
+  await dbPut('produtos', p);
+  toast('Produto desativado', 'success');
+  renderProdutos();
+}
+
+// ============================================================
+// ESTOQUE
+// ============================================================
+async function renderEstoque() {
+  const [estList, prods] = await Promise.all([dbGetAll('estoque'), dbGetAll('produtos')]);
+  const prodMap = {};
+  prods.forEach(p => prodMap[p.id] = p.descricao);
+  document.getElementById('tbody-estoque').innerHTML = estList.length === 0
+    ? `<tr><td colspan="6"><div class="empty-state"><div class="icon">📊</div><p>Nenhum produto em estoque</p></div></td></tr>`
+    : estList.map(e => {
+      const level = e.estoqueatual < 5 ? 'badge-danger' : e.estoqueatual < 15 ? 'badge-warning' : 'badge-success';
+      return `
+        <tr>
+          <td class="text-mono" style="color:var(--muted)">#${e.id}</td>
+          <td><strong>${prodMap[e.idproduto] || '?'}</strong></td>
+          <td class="text-mono">${e.estoqueini}</td>
+          <td><span class="badge ${level}">${e.estoqueatual}</span></td>
+          <td class="text-mono" style="font-size:11px">${e.dataalt ? new Date(e.dataalt).toLocaleDateString('pt-BR') : '—'}</td>
+          <td><button class="btn btn-outline btn-sm" onclick="modalEstoque(${e.idproduto}, '${prodMap[e.idproduto] || ''}', ${e.estoqueatual})">Ajustar</button></td>
+        </tr>`;
+    }).join('');
+}
+
+function modalEstoque(idproduto, nome, atual) {
+  document.getElementById('est-prodid').value = idproduto;
+  document.getElementById('est-prod-nome').value = nome;
+  document.getElementById('est-atual').value = atual;
+  openModal('modal-estoque');
+}
+
+async function saveEstoque() {
+  const idproduto = Number(document.getElementById('est-prodid').value);
+  const atual = parseInt(document.getElementById('est-atual').value);
+  if (isNaN(atual) || atual < 0) { toast('Quantidade inválida', 'error'); return; }
+  const all = await dbGetAll('estoque');
+  const est = all.find(e => e.idproduto === idproduto);
+  if (est) {
+    est.estoqueatual = atual;
+    est.dataalt = new Date().toISOString();
+    await dbPut('estoque', est);
+  }
+  closeModal('modal-estoque');
+  toast('Estoque atualizado', 'success');
+  renderEstoque();
+}
+
+// ============================================================
+// USUARIOS
+// ============================================================
+async function renderUsuarios() {
+  const perfis = { 1: 'Gerente', 2: 'Vendedor', 3: 'Mecânico' };
+  const users = await dbGetAll('usuarios');
+  document.getElementById('tbody-usuarios').innerHTML = users.length === 0
+    ? `<tr><td colspan="8"><div class="empty-state"><div class="icon">👥</div><p>Nenhum usuário cadastrado</p></div></td></tr>`
+    : users.map(u => `
+      <tr>
+        <td class="text-mono" style="color:var(--muted)">#${u.id}</td>
+        <td class="text-mono">${u.usuario}</td>
+        <td><strong>${u.nome}</strong></td>
+        <td class="text-mono">${formatCPF(u.cpf)}</td>
+        <td>${u.funcao}</td>
+        <td><span class="badge badge-info">${perfis[u.tipofuncao] || '?'}</span></td>
+        <td><span class="badge ${u.ativo ? 'badge-success' : 'badge-danger'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="modalUsuario(${u.id})">✏️</button>
+          ${u.id !== currentUser.id ? `<button class="btn btn-danger btn-sm" onclick="deleteUsuario(${u.id})">🗑</button>` : ''}
+        </td>
+      </tr>`).join('');
+}
+
+async function modalUsuario(id) {
+  document.getElementById('modal-usr-title').textContent = id ? 'Editar Usuário' : 'Novo Usuário';
+  document.getElementById('usr-id').value = id || '';
+  if (!id) {
+    ['login','senha','nome','cpf','funcao'].forEach(f => document.getElementById('usr-'+f).value = '');
+    document.getElementById('usr-tipo').value = '2';
+    openModal('modal-usuario'); return;
+  }
+  const u = await dbGet('usuarios', id);
+  document.getElementById('usr-login').value = u.usuario;
+  document.getElementById('usr-senha').value = '';
+  document.getElementById('usr-nome').value = u.nome;
+  document.getElementById('usr-cpf').value = u.cpf;
+  document.getElementById('usr-funcao').value = u.funcao;
+  document.getElementById('usr-tipo').value = u.tipofuncao;
+  openModal('modal-usuario');
+}
+
+async function saveUsuario() {
+  const login = document.getElementById('usr-login').value.trim();
+  const senha = document.getElementById('usr-senha').value;
+  const nome = document.getElementById('usr-nome').value.trim();
+  const cpf = document.getElementById('usr-cpf').value.trim();
+  const id = document.getElementById('usr-id').value;
+  if (!login || (!id && !senha) || !nome || !cpf) { toast('Preencha todos os campos obrigatórios', 'error'); return; }
+  const all = await dbGetAll('usuarios');
+  const dup = all.find(u => u.usuario === login && (!id || u.id != id));
+  if (dup) { toast('Login já está em uso', 'error'); return; }
+  const obj = {
+    usuario: login,
+    nome, cpf,
+    funcao: document.getElementById('usr-funcao').value,
+    tipofuncao: Number(document.getElementById('usr-tipo').value),
+    ativo: 1
+  };
+  if (senha) obj.senha = senha;
+  if (id) {
+    const existing = await dbGet('usuarios', Number(id));
+    Object.assign(existing, obj);
+    await dbPut('usuarios', existing);
+  } else {
+    await dbPut('usuarios', obj);
+  }
+  closeModal('modal-usuario');
+  toast(id ? 'Usuário atualizado' : 'Usuário cadastrado', 'success');
+  renderUsuarios();
+}
+
+async function deleteUsuario(id) {
+  if (!confirm('Desativar este usuário?')) return;
+  const u = await dbGet('usuarios', id);
+  u.ativo = 0;
+  await dbPut('usuarios', u);
+  toast('Usuário desativado', 'success');
+  renderUsuarios();
+}
+
+// ============================================================
+// PEDIDOS
+// ============================================================
+let itensPedido = [];
+
+async function renderPedidos() {
+  const [pedidos, clientes] = await Promise.all([dbGetAll('pedidos'), dbGetAll('clientes')]);
+  const clientMap = {};
+  clientes.forEach(c => clientMap[c.id] = c.nome);
+  const q = document.getElementById('search-pedidos')?.value?.toLowerCase() || '';
+  const filt = pedidos.filter(p =>
+    (clientMap[p.idcliente] || '').toLowerCase().includes(q) ||
+    String(p.id).includes(q)
+  );
+  const statusBadge = { ABERTO: 'badge-info', CONCLUIDO: 'badge-success', CANCELADO: 'badge-danger' };
+  document.getElementById('tbody-pedidos').innerHTML = filt.length === 0
+    ? `<tr><td colspan="7"><div class="empty-state"><div class="icon">🛒</div><p>Nenhum pedido encontrado</p></div></td></tr>`
+    : filt.slice().reverse().map(p => `
+      <tr>
+        <td class="text-mono" style="color:var(--muted)">#${p.id}</td>
+        <td><strong>${clientMap[p.idcliente] || '?'}</strong></td>
+        <td class="text-mono">${p.qtdItens || 0}</td>
+        <td class="text-mono">R$ ${(p.total||0).toFixed(2).replace('.',',')}</td>
+        <td><span class="badge ${statusBadge[p.status] || 'badge-muted'}">${p.status}</span></td>
+        <td class="text-mono" style="font-size:11px">${p.datacriacao ? new Date(p.datacriacao).toLocaleDateString('pt-BR') : '—'}</td>
+        <td>
+          ${p.status==='ABERTO' ? `<button class="btn btn-success btn-sm" onclick="concluirPedido(${p.id})">✓</button>` : ''}
+          ${p.status==='ABERTO' ? `<button class="btn btn-outline btn-sm" onclick="modalPedido(${p.id})">✏️</button>` : ''}
+          ${p.status!=='CONCLUIDO' ? `<button class="btn btn-danger btn-sm" onclick="cancelarPedido(${p.id})">✕</button>` : ''}
+        </td>
+      </tr>`).join('');
+}
+
+async function modalPedido(id) {
+  itensPedido = [];
+  const clientes = await dbGetAll('clientes');
+  const opts = clientes.filter(c => c.ativo).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  document.getElementById('ped-cliente').innerHTML = '<option value="">Selecione...</option>' + opts;
+  document.getElementById('modal-ped-title').textContent = id ? 'Editar Pedido' : 'Novo Pedido';
+  document.getElementById('ped-id').value = id || '';
+  if (id) {
+    const p = await dbGet('pedidos', id);
+    document.getElementById('ped-cliente').value = p.idcliente;
+    document.getElementById('ped-obs').value = p.observacao || '';
+    const items = await dbGetAll('itenspedido');
+    itensPedido = items.filter(i => i.idpedido === id).map(i => ({...i}));
+  } else {
+    document.getElementById('ped-obs').value = '';
+  }
+  renderItensPedido();
+  openModal('modal-pedido');
+}
+
+async function addItemPedido() {
+  const prods = await dbGetAll('produtos');
+  const estList = await dbGetAll('estoque');
+  const estMap = {};
+  estList.forEach(e => estMap[e.idproduto] = e.estoqueatual);
+  itensPedido.push({ tempId: Date.now(), idproduto: '', quantidade: 1, valorunitario: 0 });
+  renderItensPedido(prods, estMap);
+}
+
+async function renderItensPedido(prods, estMap) {
+  if (!prods) prods = await dbGetAll('produtos');
+  if (!estMap) {
+    const el = await dbGetAll('estoque');
+    estMap = {};
+    el.forEach(e => estMap[e.idproduto] = e.estoqueatual);
+  }
+  const prodOpts = prods.filter(p => p.ativo).map(p => `<option value="${p.id}" data-val="${p.valor}">${p.descricao} (Est: ${estMap[p.id]??0})</option>`).join('');
+  const list = document.getElementById('itens-pedido-list');
+  list.innerHTML = itensPedido.map((item, idx) => `
+    <div class="item-row">
+      <select onchange="onProdutoSelect(${idx}, this)" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px;font-family:'Space Mono',monospace;font-size:12px;outline:none;width:100%;">
+        <option value="">Selecione produto...</option>
+        ${prodOpts}
+      </select>
+      <input type="number" value="${item.quantidade}" min="1" onchange="itensPedido[${idx}].quantidade=Number(this.value);calcTotalPedido()"
+        style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px;font-family:'Space Mono',monospace;font-size:12px;outline:none;text-align:center">
+      <input type="number" value="${item.valorunitario}" step="0.01" min="0" onchange="itensPedido[${idx}].valorunitario=parseFloat(this.value)||0;calcTotalPedido()"
+        style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px;font-family:'Space Mono',monospace;font-size:12px;outline:none">
+      <button class="btn btn-danger btn-sm" onclick="removeItemPedido(${idx})">✕</button>
+    </div>`).join('');
+  // Set selected values
+  list.querySelectorAll('select').forEach((sel, idx) => {
+    if (itensPedido[idx].idproduto) sel.value = itensPedido[idx].idproduto;
+  });
+  calcTotalPedido();
+}
+
+function onProdutoSelect(idx, sel) {
+  const opt = sel.options[sel.selectedIndex];
+  itensPedido[idx].idproduto = Number(sel.value);
+  itensPedido[idx].valorunitario = parseFloat(opt.dataset.val) || 0;
+  const row = sel.closest('.item-row');
+  row.querySelectorAll('input')[1].value = itensPedido[idx].valorunitario;
+  calcTotalPedido();
+}
+
+function removeItemPedido(idx) {
+  itensPedido.splice(idx, 1);
+  renderItensPedido();
+}
+
+function calcTotalPedido() {
+  const total = itensPedido.reduce((s, i) => s + (i.quantidade * i.valorunitario), 0);
+  document.getElementById('ped-total').textContent = total.toFixed(2).replace('.', ',');
+}
+
+async function savePedido() {
+  const idcliente = Number(document.getElementById('ped-cliente').value);
+  if (!idcliente) { toast('Selecione um cliente', 'error'); return; }
+  if (itensPedido.length === 0) { toast('Adicione ao menos um item', 'error'); return; }
+  if (itensPedido.some(i => !i.idproduto)) { toast('Selecione o produto em todos os itens', 'error'); return; }
+  const id = document.getElementById('ped-id').value;
+  const total = itensPedido.reduce((s, i) => s + i.quantidade * i.valorunitario, 0);
+  const obj = {
+    idcliente, idusuario: currentUser.id,
+    total, status: 'ABERTO',
+    qtdItens: itensPedido.length,
+    observacao: document.getElementById('ped-obs').value,
+    datacriacao: new Date().toISOString()
+  };
+  if (id) obj.id = Number(id);
+  const pedId = await dbPut('pedidos', obj);
+  if (id) {
+    const all = await dbGetAll('itenspedido');
+    for (const i of all.filter(i => i.idpedido == id)) await dbDelete('itenspedido', i.id);
+  }
+  for (const item of itensPedido) {
+    await dbPut('itenspedido', { idpedido: Number(id || pedId), idproduto: item.idproduto, quantidade: item.quantidade, valorunitario: item.valorunitario });
+  }
+  closeModal('modal-pedido');
+  toast(id ? 'Pedido atualizado' : 'Pedido criado', 'success');
+  renderPedidos();
+}
+
+async function concluirPedido(id) {
+  if (!confirm('Concluir este pedido? O estoque será atualizado.')) return;
+  const p = await dbGet('pedidos', id);
+  p.status = 'CONCLUIDO';
+  await dbPut('pedidos', p);
+  const items = (await dbGetAll('itenspedido')).filter(i => i.idpedido === id);
+  const estList = await dbGetAll('estoque');
+  for (const item of items) {
+    const est = estList.find(e => e.idproduto === item.idproduto);
+    if (est) {
+      est.estoqueatual = Math.max(0, est.estoqueatual - item.quantidade);
+      est.dataalt = new Date().toISOString();
+      await dbPut('estoque', est);
+    }
+  }
+  toast('Pedido concluído e estoque atualizado', 'success');
+  renderPedidos();
+}
+
+async function cancelarPedido(id) {
+  if (!confirm('Cancelar este pedido?')) return;
+  const p = await dbGet('pedidos', id);
+  p.status = 'CANCELADO';
+  await dbPut('pedidos', p);
+  toast('Pedido cancelado', 'success');
+  renderPedidos();
+}
+
+// ============================================================
+// ORDENS DE SERVIÇO
+// ============================================================
+let itensOS = [];
+
+async function renderOrdens() {
+  const [ordens, clientes, bikes, tipos] = await Promise.all([
+    dbGetAll('ordens'), dbGetAll('clientes'), dbGetAll('bicicletas'), dbGetAll('tiposservico')
+  ]);
+  const clientMap = {};
+  clientes.forEach(c => clientMap[c.id] = c.nome);
+  const bikeMap = {};
+  bikes.forEach(b => bikeMap[b.id] = `${b.marca} ${b.modelo}`);
+  const tipoMap = {};
+  tipos.forEach(t => tipoMap[t.id] = t.tiposervico);
+
+  const q = document.getElementById('search-ordens')?.value?.toLowerCase() || '';
+  const sf = document.getElementById('filter-status-os')?.value || '';
+
+  const filt = ordens.filter(o => {
+    const match = (clientMap[o.idcliente]||'').toLowerCase().includes(q) ||
+      (bikeMap[o.idbicicleta]||'').toLowerCase().includes(q) ||
+      String(o.id).includes(q);
+    const statusMatch = !sf || o.status === sf;
+    return match && statusMatch;
+  }).slice().reverse();
+
+  const statusColors = {
+    ABERTA: { badge: 'badge-info', card: 'status-ABERTA' },
+    EM_ANDAMENTO: { badge: 'badge-warning', card: 'status-EM_ANDAMENTO' },
+    CONCLUIDA: { badge: 'badge-success', card: 'status-CONCLUIDA' },
+    CANCELADA: { badge: 'badge-muted', card: 'status-CANCELADA' },
+  };
+  const statusLabels = {
+    ABERTA: 'Aberta', EM_ANDAMENTO: 'Em Andamento', CONCLUIDA: 'Concluída', CANCELADA: 'Cancelada'
+  };
+
+  const list = document.getElementById('list-ordens');
+  if (filt.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">🔧</div><p>Nenhuma ordem de serviço encontrada</p></div>';
+    return;
+  }
+
+  list.innerHTML = filt.map(o => {
+    const sc = statusColors[o.status] || { badge: 'badge-muted', card: '' };
+    return `
+      <div class="os-card ${sc.card}">
+        <div class="os-header">
+          <div>
+            <div class="os-num">OS #${String(o.id).padStart(4,'0')} · ${o.datacriacao ? new Date(o.datacriacao).toLocaleDateString('pt-BR') : '—'}</div>
+            <div class="os-client">${clientMap[o.idcliente] || '?'}</div>
+            <div class="os-desc">🚲 ${bikeMap[o.idbicicleta] || '?'} ${o.idtiposervico ? '· ' + tipoMap[o.idtiposervico] : ''}</div>
+          </div>
+          <span class="badge ${sc.badge}">${statusLabels[o.status] || o.status}</span>
+        </div>
+        <div style="font-size:13px;color:var(--muted);white-space:pre-wrap;">${o.descricao}</div>
+        <div class="os-footer">
+          <span class="text-mono" style="font-size:14px;font-weight:700;color:var(--accent)">R$ ${(o.valortotal||0).toFixed(2).replace('.',',')}</span>
+          <button class="btn btn-outline btn-sm" onclick="modalOrdem(${o.id})">✏️ Editar</button>
+          ${o.status === 'ABERTA' ? `<button class="btn btn-success btn-sm" onclick="avancarOS(${o.id})">▶ Iniciar</button>` : ''}
+          ${o.status === 'EM_ANDAMENTO' ? `<button class="btn btn-success btn-sm" onclick="concluirOS(${o.id})">✓ Concluir</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function modalOrdem(id) {
+  itensOS = [];
+  const [clientes, bikes, tipos, prods] = await Promise.all([
+    dbGetAll('clientes'), dbGetAll('bicicletas'), dbGetAll('tiposservico'), dbGetAll('produtos')
+  ]);
+  const cliOpts = clientes.filter(c => c.ativo).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  document.getElementById('os-cliente').innerHTML = '<option value="">Selecione...</option>' + cliOpts;
+  const tipoOpts = tipos.map(t => `<option value="${t.id}">${t.tiposervico} (R$ ${t.valor.toFixed(2)})</option>`).join('');
+  document.getElementById('os-tipo').innerHTML = '<option value="">Sem tipo específico</option>' + tipoOpts;
+  document.getElementById('modal-os-title').textContent = id ? 'Editar OS #' + id : 'Nova Ordem de Serviço';
+  document.getElementById('os-id').value = id || '';
+  document.getElementById('os-cancel-group').style.display = 'none';
+  document.getElementById('os-status').onchange = function() {
+    document.getElementById('os-cancel-group').style.display = this.value === 'CANCELADA' ? '' : 'none';
+  };
+
+  if (id) {
+    const o = await dbGet('ordens', id);
+    document.getElementById('os-cliente').value = o.idcliente;
+    await loadBikesForOS(o.idbicicleta);
+    document.getElementById('os-bicicleta').value = o.idbicicleta;
+    document.getElementById('os-tipo').value = o.idtiposervico || '';
+    document.getElementById('os-desc').value = o.descricao;
+    document.getElementById('os-status').value = o.status;
+    document.getElementById('os-valor').value = o.valortotal || '';
+    document.getElementById('os-justificativa').value = o.justificativa_cancelamento || '';
+    if (o.status === 'CANCELADA') document.getElementById('os-cancel-group').style.display = '';
+    const items = (await dbGetAll('itensos')).filter(i => i.idordem === id);
+    itensOS = items.map(i => ({...i}));
+  } else {
+    ['desc','valor','justificativa'].forEach(f => document.getElementById('os-'+f).value = '');
+    document.getElementById('os-status').value = 'ABERTA';
+    await loadBikesForOS();
+  }
+  renderItensOS(prods);
+  openModal('modal-ordem');
+}
+
+async function loadBikesForOS(selectedId) {
+  const idcliente = Number(document.getElementById('os-cliente').value);
+  const bikes = await dbGetAll('bicicletas');
+  const filt = idcliente ? bikes.filter(b => b.idcliente === idcliente && b.ativo) : bikes.filter(b => b.ativo);
+  const opts = filt.map(b => `<option value="${b.id}">${b.marca} ${b.modelo} (${b.ano || '—'})</option>`).join('');
+  document.getElementById('os-bicicleta').innerHTML = '<option value="">Selecione...</option>' + opts;
+  if (selectedId) document.getElementById('os-bicicleta').value = selectedId;
+}
+
+async function addItemOS() {
+  itensOS.push({ tempId: Date.now(), idproduto: '', quantidade: 1, valorunitario: 0 });
+  const prods = await dbGetAll('produtos');
+  renderItensOS(prods);
+}
+
+async function renderItensOS(prods) {
+  if (!prods) prods = await dbGetAll('produtos');
+  const estList = await dbGetAll('estoque');
+  const estMap = {};
+  estList.forEach(e => estMap[e.idproduto] = e.estoqueatual);
+  const prodOpts = prods.filter(p => p.ativo).map(p => `<option value="${p.id}" data-val="${p.valor}">${p.descricao}</option>`).join('');
+  const list = document.getElementById('itens-os-list');
+  list.innerHTML = itensOS.length === 0
+    ? '<div style="color:var(--muted);font-size:12px;padding:8px 0">Nenhuma peça adicionada</div>'
+    : itensOS.map((item, idx) => `
+      <div class="item-row">
+        <select onchange="onProdutoOSSelect(${idx}, this)" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px;font-family:'Space Mono',monospace;font-size:12px;outline:none;width:100%;">
+          <option value="">Selecione peça...</option>${prodOpts}
+        </select>
+        <input type="number" value="${item.quantidade}" min="1" onchange="itensOS[${idx}].quantidade=Number(this.value)"
+          style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px;font-family:'Space Mono',monospace;font-size:12px;outline:none;text-align:center">
+        <input type="number" value="${item.valorunitario}" step="0.01" min="0" onchange="itensOS[${idx}].valorunitario=parseFloat(this.value)||0"
+          style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px;font-family:'Space Mono',monospace;font-size:12px;outline:none">
+        <button class="btn btn-danger btn-sm" onclick="removeItemOS(${idx})">✕</button>
+      </div>`).join('');
+  list.querySelectorAll('select').forEach((sel, idx) => {
+    if (itensOS[idx].idproduto) sel.value = itensOS[idx].idproduto;
+  });
+}
+
+function onProdutoOSSelect(idx, sel) {
+  const opt = sel.options[sel.selectedIndex];
+  itensOS[idx].idproduto = Number(sel.value);
+  itensOS[idx].valorunitario = parseFloat(opt.dataset.val) || 0;
+  const row = sel.closest('.item-row');
+  row.querySelectorAll('input')[1].value = itensOS[idx].valorunitario;
+}
+
+async function removeItemOS(idx) {
+  itensOS.splice(idx, 1);
+  renderItensOS();
+}
+
+async function saveOrdem() {
+  const idcliente = Number(document.getElementById('os-cliente').value);
+  const idbicicleta = Number(document.getElementById('os-bicicleta').value);
+  const descricao = document.getElementById('os-desc').value.trim();
+  const status = document.getElementById('os-status').value;
+  if (!idcliente || !idbicicleta || !descricao) { toast('Preencha os campos obrigatórios', 'error'); return; }
+  if (status === 'CANCELADA') {
+    const just = document.getElementById('os-justificativa').value.trim();
+    if (!just) { toast('Informe a justificativa de cancelamento', 'error'); return; }
+  }
+  const id = document.getElementById('os-id').value;
+  const obj = {
+    idcliente, idbicicleta, idusuario: currentUser.id,
+    idtiposervico: Number(document.getElementById('os-tipo').value) || null,
+    descricao, status,
+    justificativa_cancelamento: document.getElementById('os-justificativa').value,
+    valortotal: parseFloat(document.getElementById('os-valor').value) || 0,
+    datacriacao: id ? undefined : new Date().toISOString(),
+    dataconclusao: status === 'CONCLUIDA' ? new Date().toISOString() : null,
+  };
+  if (id) {
+    const existing = await dbGet('ordens', Number(id));
+    Object.assign(existing, obj);
+    await dbPut('ordens', existing);
+    const allItems = await dbGetAll('itensos');
+    for (const i of allItems.filter(i => i.idordem == id)) await dbDelete('itensos', i.id);
+  } else {
+    const newId = await dbPut('ordens', obj);
+    for (const item of itensOS) {
+      if (item.idproduto) await dbPut('itensos', { idordem: newId, idproduto: item.idproduto, quantidade: item.quantidade, valorunitario: item.valorunitario });
+    }
+    closeModal('modal-ordem');
+    toast('Ordem de serviço criada', 'success');
+    renderOrdens(); return;
+  }
+  for (const item of itensOS) {
+    if (item.idproduto) await dbPut('itensos', { idordem: Number(id), idproduto: item.idproduto, quantidade: item.quantidade, valorunitario: item.valorunitario });
+  }
+  closeModal('modal-ordem');
+  toast('Ordem de serviço atualizada', 'success');
+  renderOrdens();
+}
+
+async function avancarOS(id) {
+  const o = await dbGet('ordens', id);
+  o.status = 'EM_ANDAMENTO';
+  await dbPut('ordens', o);
+  toast('OS iniciada', 'success');
+  renderOrdens();
+}
+
+async function concluirOS(id) {
+  if (!confirm('Concluir esta ordem de serviço?')) return;
+  const o = await dbGet('ordens', id);
+  o.status = 'CONCLUIDA';
+  o.dataconclusao = new Date().toISOString();
+  await dbPut('ordens', o);
+  toast('OS concluída', 'success');
+  renderOrdens();
+}
+
+// ============================================================
+// RELATÓRIOS
+// ============================================================
+async function gerarRelatorio(tipo) {
+  const container = document.getElementById('report-output');
+  const content = document.getElementById('report-content');
+  container.style.display = '';
+  const now = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+  if (tipo === 'clientes') {
+    const clientes = await dbGetAll('clientes');
+    const ativos = clientes.filter(c => c.ativo);
+    content.innerHTML = `
+      <div class="report-title">Relatório de Clientes</div>
+      <div class="report-meta">Emitido em ${now} por ${currentUser.nome}</div>
+      <table>
+        <thead><tr><th>#</th><th>Nome</th><th>CPF</th><th>Telefone</th><th>E-mail</th><th>Cadastro</th></tr></thead>
+        <tbody>${ativos.map(c => `
+          <tr>
+            <td>${c.id}</td><td>${c.nome}</td><td>${formatCPF(c.cpf)}</td>
+            <td>${c.telefone||'—'}</td><td>${c.email||'—'}</td>
+            <td>${c.datacadastro ? new Date(c.datacadastro).toLocaleDateString('pt-BR') : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top:16px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted)">Total: ${ativos.length} clientes ativos</div>`;
+  }
+
+  if (tipo === 'pedidos') {
+    const [pedidos, clientes] = await Promise.all([dbGetAll('pedidos'), dbGetAll('clientes')]);
+    const clientMap = {};
+    clientes.forEach(c => clientMap[c.id] = c.nome);
+    const total = pedidos.filter(p => p.status==='CONCLUIDO').reduce((s, p) => s + (p.total||0), 0);
+    content.innerHTML = `
+      <div class="report-title">Relatório de Pedidos</div>
+      <div class="report-meta">Emitido em ${now} por ${currentUser.nome}</div>
+      <table>
+        <thead><tr><th>#</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Status</th><th>Data</th></tr></thead>
+        <tbody>${pedidos.slice().reverse().map(p => `
+          <tr>
+            <td>${p.id}</td><td>${clientMap[p.idcliente]||'?'}</td><td>${p.qtdItens||0}</td>
+            <td>R$ ${(p.total||0).toFixed(2).replace('.',',')}</td>
+            <td>${p.status}</td>
+            <td>${p.datacriacao ? new Date(p.datacriacao).toLocaleDateString('pt-BR') : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top:16px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted)">
+        Total faturado (concluídos): <strong style="color:var(--accent)">R$ ${total.toFixed(2).replace('.',',')}</strong>
+      </div>`;
+  }
+
+  if (tipo === 'ordens') {
+    const [ordens, clientes, bikes] = await Promise.all([dbGetAll('ordens'), dbGetAll('clientes'), dbGetAll('bicicletas')]);
+    const clientMap = {};
+    clientes.forEach(c => clientMap[c.id] = c.nome);
+    const bikeMap = {};
+    bikes.forEach(b => bikeMap[b.id] = `${b.marca} ${b.modelo}`);
+    content.innerHTML = `
+      <div class="report-title">Relatório de Ordens de Serviço</div>
+      <div class="report-meta">Emitido em ${now} por ${currentUser.nome}</div>
+      <table>
+        <thead><tr><th>OS</th><th>Cliente</th><th>Bicicleta</th><th>Status</th><th>Valor</th><th>Data</th></tr></thead>
+        <tbody>${ordens.slice().reverse().map(o => `
+          <tr>
+            <td>#${String(o.id).padStart(4,'0')}</td>
+            <td>${clientMap[o.idcliente]||'?'}</td>
+            <td>${bikeMap[o.idbicicleta]||'?'}</td>
+            <td>${o.status}</td>
+            <td>R$ ${(o.valortotal||0).toFixed(2).replace('.',',')}</td>
+            <td>${o.datacriacao ? new Date(o.datacriacao).toLocaleDateString('pt-BR') : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top:16px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted)">
+        Total de OS: ${ordens.length} | Concluídas: ${ordens.filter(o=>o.status==='CONCLUIDA').length}
+      </div>`;
+  }
+
+  if (tipo === 'estoque') {
+    const [estList, prods, forns] = await Promise.all([dbGetAll('estoque'), dbGetAll('produtos'), dbGetAll('fornecedores')]);
+    const prodMap = {};
+    prods.forEach(p => prodMap[p.id] = p);
+    const fornMap = {};
+    forns.forEach(f => fornMap[f.id] = f.nome);
+    content.innerHTML = `
+      <div class="report-title">Relatório de Estoque</div>
+      <div class="report-meta">Emitido em ${now} por ${currentUser.nome}</div>
+      <table>
+        <thead><tr><th>#</th><th>Produto</th><th>Fornecedor</th><th>Preço</th><th>Est. Inicial</th><th>Est. Atual</th><th>Última Alt.</th></tr></thead>
+        <tbody>${estList.map(e => {
+          const p = prodMap[e.idproduto] || {};
+          const nivel = e.estoqueatual < 5 ? 'color:var(--danger)' : e.estoqueatual < 15 ? 'color:var(--warning)' : '';
+          return `<tr>
+            <td>${e.id}</td>
+            <td>${p.descricao||'?'}</td>
+            <td>${fornMap[p.idfornecedor]||'?'}</td>
+            <td>R$ ${(p.valor||0).toFixed(2).replace('.',',')}</td>
+            <td>${e.estoqueini}</td>
+            <td style="${nivel}"><strong>${e.estoqueatual}</strong></td>
+            <td>${e.dataalt ? new Date(e.dataalt).toLocaleDateString('pt-BR') : '—'}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+      <div style="margin-top:16px;font-family:'Space Mono',monospace;font-size:12px;color:var(--danger)">
+        ⚠ Produtos com estoque crítico (&lt;5): ${estList.filter(e=>e.estoqueatual<5).length}
+      </div>`;
+  }
+
+  container.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', async () => {
+  db = await openDB();
+  await seedData();
+  document.getElementById('login-pass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('pt-BR', {
+    weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+  });
+});
+</script>
+</body>
+</html>
