@@ -13,7 +13,11 @@
 <meta name="msapplication-TileColor" content="#f5a623">
 <meta name="msapplication-TileImage" content="icons/icon-144.png">
 <meta name="description" content="Sistema de Gestão de Oficina Mecânica de Bicicletas">
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BikeGest">
+<meta name="theme-color" content="#f5a623">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
@@ -2805,6 +2809,172 @@ window.addEventListener('DOMContentLoaded', async () => {
     weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
   });
 });
+
+// ╔══════════════════════════════════════════════╗
+// ║          PWA — Service Worker + Install      ║
+// ╚══════════════════════════════════════════════╝
+
+// 1) Registra o Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    // Usa caminho relativo — funciona no GitHub Pages
+    navigator.serviceWorker.register('./sw.js', { scope: './' })
+      .then(reg => {
+        console.log('[PWA] Service Worker registrado! Scope:', reg.scope);
+        // Verifica atualizações a cada 60s
+        setInterval(() => reg.update(), 60000);
+      })
+      .catch(err => {
+        console.error('[PWA] Falha ao registrar SW:', err);
+      });
+  });
+}
+
+// 2) Captura o evento de instalação
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  console.log('[PWA] beforeinstallprompt capturado!');
+  // Mostra botão flutuante de instalar
+  showInstallButton();
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('[PWA] App instalado com sucesso!');
+  deferredPrompt = null;
+  hideInstallButton();
+  toast('BikeGest instalado com sucesso! 🎉', 'success');
+});
+
+// 3) Botão flutuante de instalação
+function showInstallButton() {
+  const btn = document.getElementById('fab-install');
+  if (btn) btn.style.display = 'flex';
+}
+
+function hideInstallButton() {
+  const btn = document.getElementById('fab-install');
+  if (btn) btn.style.display = 'none';
+}
+
+async function triggerInstall() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log('[PWA] Resultado da instalação:', outcome);
+    if (outcome === 'accepted') {
+      deferredPrompt = null;
+      hideInstallButton();
+    }
+  } else {
+    // Fallback: instrução manual
+    toast('Toque em ⋮ (menu do Chrome) → "Adicionar à tela inicial"', 'info');
+  }
+}
+
+// 4) Modo standalone detectado
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+  || window.navigator.standalone === true;
+
+if (isStandalone) {
+  console.log('[PWA] Rodando como app instalado (standalone)');
+  document.body.classList.add('pwa-standalone');
+  hideInstallButton();
+}
+
+// 5) Sidebar mobile
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+// 6) Atualiza bottom nav junto com goPage
+const _origGoPage = goPage;
+goPage = function(page) {
+  _origGoPage(page);
+  document.querySelectorAll('.bottom-nav-item[data-page]').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === page);
+  });
+  closeSidebar();
+};
+
+// 7) Indicador online/offline
+function updateOnlineStatus() {
+  const isOnline = navigator.onLine;
+  let bar = document.getElementById('offline-bar');
+  if (!isOnline) {
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'offline-bar';
+      bar.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0;
+        background: #e8522e; color: #fff;
+        text-align: center; padding: 6px 12px;
+        font-size: 12px; font-family: 'Space Mono', monospace;
+        z-index: 9999; letter-spacing: 0.5px;
+      `;
+      bar.textContent = '⚡ Sem conexão — modo offline (dados salvos localmente)';
+      document.body.appendChild(bar);
+    }
+  } else {
+    if (bar) bar.remove();
+  }
+}
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// 8) Previne zoom em double-tap (iOS/Android)
+let _lastTouch = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if (now - _lastTouch < 300) e.preventDefault();
+  _lastTouch = now;
+}, { passive: false });
+
+// 9) Splash screen
+window.addEventListener('DOMContentLoaded', () => {
+  const splash = document.getElementById('splash');
+  if (splash) {
+    setTimeout(() => {
+      splash.style.opacity = '0';
+      splash.style.transition = 'opacity 0.4s ease';
+      setTimeout(() => splash.remove(), 400);
+    }, 1400);
+  }
+});
 </script>
+
+<!-- FAB Botão de Instalação -->
+<button id="fab-install" onclick="triggerInstall()" style="
+  display: none;
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  right: 16px;
+  z-index: 500;
+  background: #f5a623;
+  color: #000;
+  border: none;
+  border-radius: 28px;
+  padding: 14px 20px;
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(245,166,35,0.4);
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.3px;
+">
+  <span style="font-size:20px">📲</span> Instalar App
+</button>
+
 </body>
 </html>

@@ -1,112 +1,94 @@
-// BikeGest Service Worker
-// Versão do cache — altere para forçar atualização
-const CACHE_NAME = 'bikegest-v1.0.0';
+// BikeGest Service Worker v2
+const CACHE_NAME = 'bikegest-v2';
 
-// Arquivos a serem cacheados no install
-const ASSETS_TO_CACHE = [
+const CORE_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  // Fontes do Google (serão cacheadas dinamicamente)
 ];
 
-// ── INSTALL: pré-cache dos arquivos principais ──
+// INSTALL — cacheia os arquivos essenciais
 self.addEventListener('install', event => {
-  console.log('[SW] Install');
+  console.log('[SW] Instalando...');
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS_TO_CACHE).catch(err => {
-        console.warn('[SW] Falha ao cachear alguns assets:', err);
-      });
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(CORE_ASSETS))
+      .then(() => {
+        console.log('[SW] Cache pronto!');
+        return self.skipWaiting();
+      })
+      .catch(err => console.warn('[SW] Erro no cache:', err))
   );
-  self.skipWaiting();
 });
 
-// ── ACTIVATE: remove caches antigos ──
+// ACTIVATE — limpa caches antigos
 self.addEventListener('activate', event => {
-  console.log('[SW] Activate');
+  console.log('[SW] Ativando...');
   event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => {
-            console.log('[SW] Deletando cache antigo:', key);
-            return caches.delete(key);
-          })
-      );
-    })
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => {
+          console.log('[SW] Removendo cache antigo:', k);
+          return caches.delete(k);
+        })
+      )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// ── FETCH: estratégia Cache First com fallback para rede ──
+// FETCH — Network First para HTML, Cache First para assets
 self.addEventListener('fetch', event => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  // Ignora extensões do Chrome e requisições não-GET
-  if (request.method !== 'GET') return;
+  if (event.request.method !== 'GET') return;
+  
+  const url = new URL(event.request.url);
+  
+  // Ignora extensões do Chrome
   if (url.protocol === 'chrome-extension:') return;
 
-  // Para fontes do Google: Cache First
-  if (url.hostname.includes('fonts.googleapis.com') ||
-      url.hostname.includes('fonts.gstatic.com')) {
+  // Fontes do Google: Cache First
+  if (url.hostname.includes('fonts.g')) {
     event.respondWith(
-      caches.open(CACHE_NAME).then(cache => {
-        return cache.match(request).then(cached => {
-          if (cached) return cached;
-          return fetch(request).then(response => {
-            if (response && response.status === 200) {
-              cache.put(request, response.clone());
-            }
-            return response;
-          }).catch(() => cached);
-        });
+      caches.match(event.request).then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(res => {
+          if (res && res.status === 200) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
+          }
+          return res;
+        }).catch(() => cached);
       })
     );
     return;
   }
 
-  // Para assets locais: Cache First, fallback para rede
-  event.respondWith(
-    caches.match(request).then(cached => {
-      if (cached) return cached;
+  // HTML principal: Network First (garante conteúdo atualizado)
+  if (event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then(res => {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
+          return res;
+        })
+        .catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
 
-      return fetch(request).then(response => {
-        // Cacheia respostas válidas de arquivos locais
-        if (response && response.status === 200 && response.type !== 'opaque') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, responseClone);
-          });
+  // Demais assets: Cache First
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+      return fetch(event.request).then(res => {
+        if (res && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
         }
-        return response;
-      }).catch(() => {
-        // Offline e não tem cache: retorna a página principal
-        if (request.destination === 'document') {
-          return caches.match('./index.html');
-        }
-      });
+        return res;
+      }).catch(() => caches.match('./index.html'));
     })
   );
-});
-
-// ── SYNC em background (quando voltar online) ──
-self.addEventListener('sync', event => {
-  console.log('[SW] Background sync:', event.tag);
-});
-
-// ── PUSH notifications (estrutura para futuro) ──
-self.addEventListener('push', event => {
-  if (!event.data) return;
-  const data = event.data.json();
-  self.registration.showNotification(data.title || 'BikeGest', {
-    body: data.body || '',
-    icon: './icons/icon-192.png',
-    badge: './icons/icon-96.png',
-  });
 });
